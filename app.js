@@ -12,13 +12,13 @@ const initializeDb = async () => {
   try {
     db = await open({
       filename: dbpath,
-      driver: sqlite.Database,
+      driver: sqlite3.Database,
     });
     app.listen(3000, () => {
       console.log("server running at port");
     });
   } catch (error) {
-    console.llog(error.message);
+    console.log(error.message);
   }
 };
 initializeDb();
@@ -118,28 +118,55 @@ app.post("/todos/", async (request, response) => {
 
 app.put("/todos/:todoId/", async (request, response) => {
   const { bookId } = request.params;
-  const todoDetails=request.body;
-  const {status}=todoDetails;
+  const todoDetails = request.body;
+  const { status } = todoDetails;
 
   const addQuery = `UPDATE
   todo
   SET 
   status='${status};`;
-    I
+  I;
+  await db.run(addQuery);
+  response.send("Status Updated");
+});
+
+app.put("/todos/:todoId/", async (request, response) => {
+  const { bookId } = request.params;
+  const todoDetails = request.body;
+  const { priority } = todoDetails;
+
+  const addQuery = `UPDATE
+  todo
+  SET 
+  priority='${priority};`;
+  I;
+  await db.run(addQuery);
+  response.send("Priority Updated");
+});
+
+app.put("/todos/:todoId/", async (request, response) => {
+  const { bookId } = request.params;
+  const todoDetails = request.body;
+  const { todo } = todoDetails;
+
+  const addQuery = `UPDATE
+  todo
+  SET 
+  todo='${todo};`;
+  I;
   await db.run(addQuery);
   response.send("Todo Updated");
 });
 
-app.delete('/todos/:todiId/',(request,response)=>{
-
-    const {todoId}=request.params;
-    const deletetodoQuery=`
+app.delete("/todos/:todiId/", async (request, response) => {
+  const { todoId } = request.params;
+  const deletetodoQuery = `
     DELETE FROM
     todo
     WHERE 
     id=${todoId};
     `;
-    await db.run(deletetodoQuery);
-    response.send('Todo Deleted');
-
+  await db.run(deletetodoQuery);
+  response.send("Todo Deleted");
 });
+module.exports = app;
