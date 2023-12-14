@@ -1,6 +1,7 @@
 const express = require("express");
 const path = require("path");
 const app = express();
+app.use(express.json());
 
 const { open } = require("sqlite");
 const sqlite3 = require("sqlite3");
@@ -23,10 +24,49 @@ const initializeDb = async () => {
 };
 initializeDb();
 
-app.get("/todos/", async (request, response) => {
-  const { status } = request.query;
+const hasPriorityAndStatusPropertied(requestQuery)=()=>{
+    return requestQuery.status!==undefined & requestQuery.priority!==undefinde
+}
 
-  const getstatusQuery = ` 
+const hasPriorityProperty(requestQuery)=()=>{
+    return requestQuery.priority!==undefined
+}
+
+const hasStatusProperty(requestQuery)=()=>{
+return requestQuery.status!==undefined
+}
+const hasTodoProperty(requestQuery)=()=>{
+return requestQuery.todo!==undefined
+}
+
+app.get("/todos/", async (request, response) => {
+  const {todo,priority,status}=request.query;
+ let gettodoQuery=null;
+ let responsedata=null;
+
+
+switch (true){
+    case hasPriorityAndStatusPropertied(request.query):
+    gettodoQuery = ` 
+    SELECT
+    *
+    FROM 
+    todo
+    WHERE
+    priority ='${priority}'AND status='${status}';
+    `;
+
+    case hasPriorityProperty(request.query):
+    gettodoQuery = ` 
+    SELECT
+    *
+    FROM 
+    todo
+    WHERE
+    priority ='${priority}';
+    `;
+    case hasStatusProperty(request.query):
+    gettodoQuery = ` 
     SELECT
     *
     FROM 
@@ -34,69 +74,22 @@ app.get("/todos/", async (request, response) => {
     WHERE
     status='${status}';
     `;
-  const responsedb = await db.all(getstatusQuery);
-  response.send(responsedb);
-});
 
-app.get("/todos/", async (request, response) => {
-  const { priority } = request.query;
-
-  const getstatusQuery = ` 
+    case hasTodoProperty(request.query):
+    gettodoQuery = ` 
     SELECT
     *
     FROM 
     todo
     WHERE
-    priority='${priority}';
+    todo='${todo}';
     `;
-  const responsedb = await db.all(getstatusQuery);
-  response.send(responsedb);
-});
 
-app.get("/todos/", async (request, response) => {
-  const { priority, status } = request.query;
+}
 
-  const getstatusQuery = ` 
-    SELECT
-    *
-    FROM 
-    todo
-    WHERE
-    priority='${priority}'
-    status='${status}';
-    `;
-  const responsedb = await db.all(getstatusQuery);
-  response.send(responsedb);
-});
-
-app.get("/todos/", async (request, response) => {
-  const { search_q } = request.query;
-
-  const getstatusQuery = ` 
-    SELECT
-    *
-    FROM 
-    todo
-    WHERE
-    todo='${search_q}';
-    `;
-  const responsedb = await db.all(getstatusQuery);
-  response.send(responsedb);
-});
-
-app.get("/todos/:todoId/", async (request, response) => {
-  const { todoId } = request.params;
-
-  const getstatusQuery = ` 
-    SELECT
-    *
-    FROM 
-    todo
-    WHERE 
-    id='${todoId}';
-    `;
-  const responsedb = await db.all(getstatusQuery);
-  response.send(responsedb);
+  
+  const responsedata= await db.all(gettodoQuery);
+  response.send(responsedata);
 });
 
 app.post("/todos/", async (request, response) => {
@@ -117,45 +110,36 @@ app.post("/todos/", async (request, response) => {
 });
 
 app.put("/todos/:todoId/", async (request, response) => {
-  const { bookId } = request.params;
+  const { todoId } = request.params;
   const todoDetails = request.body;
-  const { status } = todoDetails;
+  const { status,todo,priority} = todoDetails;
+  let responsestring=null;
+let addQuery=null;
+switch (true){
+case status!==undefined:
+    responsestring=status;
+    addQuery = `UPDATE
+    todo
+    SET 
+    status='${status};`;
+case priority!==undefined:
+    responsestring=priority;
+    addQuery = `UPDATE
+    todo
+    SET 
+    priority='${priority};`;
 
-  const addQuery = `UPDATE
-  todo
-  SET 
-  status='${status};`;
-  I;
+case todo!==undefined:
+    responsestring=todo;
+    addQuery = `UPDATE
+    todo
+    SET
+    todo='${todo};`;
+
+  }
+ 
   await db.run(addQuery);
-  response.send("Status Updated");
-});
-
-app.put("/todos/:todoId/", async (request, response) => {
-  const { bookId } = request.params;
-  const todoDetails = request.body;
-  const { priority } = todoDetails;
-
-  const addQuery = `UPDATE
-  todo
-  SET 
-  priority='${priority};`;
-  I;
-  await db.run(addQuery);
-  response.send("Priority Updated");
-});
-
-app.put("/todos/:todoId/", async (request, response) => {
-  const { bookId } = request.params;
-  const todoDetails = request.body;
-  const { todo } = todoDetails;
-
-  const addQuery = `UPDATE
-  todo
-  SET 
-  todo='${todo};`;
-  I;
-  await db.run(addQuery);
-  response.send("Todo Updated");
+  response.send(`${responsestring} Updated`);
 });
 
 app.delete("/todos/:todiId/", async (request, response) => {
