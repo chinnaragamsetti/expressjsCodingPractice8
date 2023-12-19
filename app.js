@@ -24,40 +24,41 @@ const initializeDb = async () => {
 };
 initializeDb();
 
-const hasPriorityAndStatusPropertied(requestQuery)=()=>{
-    return requestQuery.status!==undefined & requestQuery.priority!==undefinde
-}
+const hasPriorityAndStatusPropertied = (requestQuery) => {
+  return (
+    (requestQuery.status !== undefined) & (requestQuery.priority !== undefined)
+  );
+};
 
-const hasPriorityProperty(requestQuery)=()=>{
-    return requestQuery.priority!==undefined
-}
+const hasPriorityProperty = (requestQuery) => {
+  return requestQuery.priority !== undefined;
+};
 
-const hasStatusProperty(requestQuery)=()=>{
-return requestQuery.status!==undefined
-}
-const hasTodoProperty(requestQuery)=()=>{
-return requestQuery.todo!==undefined
-}
+const hasStatusProperty = (requestQuery) => {
+  return requestQuery.status !== undefined;
+};
+const hasTodoProperty = (requestQuery) => {
+  return requestQuery.todo !== undefined;
+};
 
 app.get("/todos/", async (request, response) => {
-  const {todo,priority,status}=request.query;
- let gettodoQuery=null;
- let responsedata=null;
+  const { todo, priority, status } = request.query;
+  let gettodoQuery = null;
+  let responsedata = null;
 
-
-switch (true){
+  switch (true) {
     case hasPriorityAndStatusPropertied(request.query):
-    gettodoQuery = ` 
+      gettodoQuery = ` 
     SELECT
     *
-    FROM 
+    FROM
     todo
     WHERE
     priority ='${priority}'AND status='${status}';
     `;
 
     case hasPriorityProperty(request.query):
-    gettodoQuery = ` 
+      gettodoQuery = ` 
     SELECT
     *
     FROM 
@@ -66,7 +67,7 @@ switch (true){
     priority ='${priority}';
     `;
     case hasStatusProperty(request.query):
-    gettodoQuery = ` 
+      gettodoQuery = ` 
     SELECT
     *
     FROM 
@@ -76,7 +77,7 @@ switch (true){
     `;
 
     case hasTodoProperty(request.query):
-    gettodoQuery = ` 
+      gettodoQuery = ` 
     SELECT
     *
     FROM 
@@ -84,11 +85,9 @@ switch (true){
     WHERE
     todo='${todo}';
     `;
+  }
 
-}
-
-  
-  const responsedata= await db.all(gettodoQuery);
+  responsedata = await db.all(gettodoQuery);
   response.send(responsedata);
 });
 
@@ -100,7 +99,7 @@ app.post("/todos/", async (request, response) => {
     todo{id,todo,priority,status}
     VALUES 
     (
-        '${id}',
+        ${id},
          '${todo}',
           '${priority}',
            '${status}'
@@ -112,32 +111,35 @@ app.post("/todos/", async (request, response) => {
 app.put("/todos/:todoId/", async (request, response) => {
   const { todoId } = request.params;
   const todoDetails = request.body;
-  const { status,todo,priority} = todoDetails;
-  let responsestring=null;
-let addQuery=null;
-switch (true){
-case status!==undefined:
-    responsestring=status;
-    addQuery = `UPDATE
+  const { status, todo, priority } = todoDetails;
+  let responsestring = null;
+  let addQuery = null;
+  switch (true) {
+    case status !== undefined:
+      responsestring = "Status";
+      addQuery = `UPDATE
     todo
     SET 
-    status='${status};`;
-case priority!==undefined:
-    responsestring=priority;
-    addQuery = `UPDATE
-    todo
-    SET 
-    priority='${priority};`;
+    status='${status}'
+    WHERE id=${todoId};`;
 
-case todo!==undefined:
-    responsestring=todo;
-    addQuery = `UPDATE
+    case priority !== undefined:
+      responsestring = "Priority";
+      addQuery = `UPDATE
+    todo
+    SET 
+    priority='${priority}'
+     WHERE id=${todoId};`;
+
+    case todo !== undefined:
+      responsestring = "Todo";
+      addQuery = `UPDATE
     todo
     SET
-    todo='${todo};`;
-
+    todo='${todo}
+     WHERE id=${todoId};`;
   }
- 
+
   await db.run(addQuery);
   response.send(`${responsestring} Updated`);
 });
@@ -153,4 +155,13 @@ app.delete("/todos/:todiId/", async (request, response) => {
   await db.run(deletetodoQuery);
   response.send("Todo Deleted");
 });
+
+/*
+app.get("/todos/", async (request, response) => {
+  const todoQuery = `
+    SELECT * FROM todo;
+    `;
+  const dbtodoQuery = await db.all(todoQuery);
+  response.send(dbtodoQuery);
+});*/
 module.exports = app;
