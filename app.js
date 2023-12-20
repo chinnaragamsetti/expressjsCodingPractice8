@@ -26,7 +26,7 @@ initializeDb();
 
 const hasPriorityAndStatusPropertied = (requestQuery) => {
   return (
-    (requestQuery.status !== undefined) & (requestQuery.priority !== undefined)
+    requestQuery.status !== undefined && requestQuery.priority !== undefined
   );
 };
 
@@ -42,7 +42,7 @@ const hasTodoProperty = (requestQuery) => {
 };
 
 app.get("/todos/", async (request, response) => {
-  const { todo, priority, status } = request.query;
+  const { todo = "", priority, status } = request.query;
   let gettodoQuery = null;
   let responsedata = null;
 
@@ -53,9 +53,9 @@ app.get("/todos/", async (request, response) => {
     *
     FROM
     todo
-    WHERE
-    priority ='${priority}'AND status='${status}';
-    `;
+    WHERE todo LIKE '%${todo}%' AND
+    priority ='${priority}'AND status='${status}';`;
+      break;
 
     case hasPriorityProperty(request.query):
       gettodoQuery = ` 
@@ -63,28 +63,28 @@ app.get("/todos/", async (request, response) => {
     *
     FROM 
     todo
-    WHERE
-    priority ='${priority}';
-    `;
+    WHERE todo LIKE '%${todo}%' AND
+    priority ='${priority}';`;
+      break;
+
     case hasStatusProperty(request.query):
       gettodoQuery = ` 
     SELECT
     *
     FROM 
     todo
-    WHERE
-    status='${status}';
-    `;
+    WHERE todo LIKE '%${todo}%' AND
+    status='${status}';`;
+      break;
 
-    case hasTodoProperty(request.query):
+    default:
       gettodoQuery = ` 
     SELECT
     *
     FROM 
     todo
-    WHERE
-    todo='${todo}';
-    `;
+    WHERE 
+    todo='${todo}';`;
   }
 
   responsedata = await db.all(gettodoQuery);
@@ -122,6 +122,7 @@ app.put("/todos/:todoId/", async (request, response) => {
     SET 
     status='${status}'
     WHERE id=${todoId};`;
+      break;
 
     case priority !== undefined:
       responsestring = "Priority";
@@ -130,6 +131,7 @@ app.put("/todos/:todoId/", async (request, response) => {
     SET 
     priority='${priority}'
      WHERE id=${todoId};`;
+      break;
 
     case todo !== undefined:
       responsestring = "Todo";
@@ -138,6 +140,7 @@ app.put("/todos/:todoId/", async (request, response) => {
     SET
     todo='${todo}
      WHERE id=${todoId};`;
+      break;
   }
 
   await db.run(addQuery);
@@ -156,12 +159,9 @@ app.delete("/todos/:todiId/", async (request, response) => {
   response.send("Todo Deleted");
 });
 
-/*
 app.get("/todos/", async (request, response) => {
-  const todoQuery = `
-    SELECT * FROM todo;
-    `;
+  const todoQuery = `SELECT * FROM todo;`;
   const dbtodoQuery = await db.all(todoQuery);
   response.send(dbtodoQuery);
-});*/
+});
 module.exports = app;
